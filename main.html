@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="./Miner.css"/>
+    <link rel="stylesheet" href="./main.css"/>
+</head>
+<body>
+<div id="miner">
+    <div id="minerControl">
+        <div class="samples">
+            <div class="sample8x8">Start new game on 8x8</div>
+            <div class="sample16x16">Start new game on 16x16</div>
+            <div class="sample40x40">Start new game on 40x40</div>
+        </div>
+        <div class="custom_field">
+            <input type="text" name="customWidth" placeholder="Custom width"/>
+            <input type="text" name="customHeight" placeholder="Custom height"/>
+            <input type="text" name="customBombCount" placeholder="Custom bomb count"/>
+            <button name="startCustom">Go!</button>
+        </div>
+        <div class="info">
+            <div>Flags in field <span class="flags"></span></div>
+            <div>Bomb available <span class="bomb-count"></span></div>
+        </div>
+    </div>
+</div>
+<script src="Miner.class.js"></script>
+<script src="main.js"></script>
+
+</body>
+</html>

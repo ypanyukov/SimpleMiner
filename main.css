@@ -1,0 +1,16 @@
+#miner {
+    width: 200px;
+    margin: 0 auto;
+}
+
+div.samples div[class*="sample"],
+div.custom_field {
+    border: 1px solid grey;
+    margin: 2px 0;
+    cursor: pointer;
+}
+
+div.samples div[class*="sample"]:hover,
+div.custom_field:hover {
+    border: 1px solid #bc4b3f;
+}

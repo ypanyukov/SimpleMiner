@@ -1,0 +1,35 @@
+div[class*="miner-field"] {
+    margin: 0 auto;
+}
+
+div[class*="miner-field"] button {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    outline: 0;
+    float: left;
+    font-weight: bold;
+}
+
+div[class*="miner-field"] button:hover {
+    border: 1px solid #ddd;
+}
+
+div[class*="miner-field"] button.break-line {
+    clear: both;
+}
+
+div[class*="miner-field"] button[class*="bomb-near"] {
+    border: 1px solid #eee;
+}
+
+div[class*="miner-field"] button.is-bomb {
+    border: 1px solid #eee;
+    background: #f33;
+}
+
+div[class*="miner-field"] button.flag {
+    border: 1px solid #eee;
+    background: #6fff54;
+}
