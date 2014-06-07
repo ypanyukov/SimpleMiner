@@ -28,16 +28,17 @@ HTMLElement.prototype.addEvent = function (type, handler) {
 };
 
 HTMLElement.prototype.fireEvent = function (event) {
+    var evt = null;
     if (document.createEventObject) {
-        var evt = document.createEventObject();
+        evt = document.createEventObject();
         return this.fireEvent('on' + event, evt)
     }
     else {
-        var evt = document.createEvent("HTMLEvents");
+        evt = document.createEvent("HTMLEvents");
         evt.initEvent(event, true, true);
         return !this.dispatchEvent(evt);
     }
-}
+};
 
 HTMLElement.prototype.addClass = function (className) {
     var classes = this.className.split(" ");
@@ -110,22 +111,22 @@ var Cell = function (parent, x, y) {
     };
 };
 
-var Miner = function (container, width, height, bombCount) {
+var Miner = function (container, width, height, bombCount, hint) {
 
-    __this = this;
-
-    this.minerId = '';
-
-    var minerFieldClassName,
+    var __this = this,
+        minerFieldClassName,
         elements,
-        __x,
-        __y,
-        rightFlags = 0,
+        __width,
+        __height,
+        rightFlags,
         flags = 0,
-        openCells = 0,
+        openCells,
         field,
         bombCountElement,
-        flagElement;
+        bombCountElementCallback,
+        flagElement,
+        flagElementCallback,
+        defaultParams;
 
     function setToDefault(params) {
         var date = new Date();
@@ -134,33 +135,40 @@ var Miner = function (container, width, height, bombCount) {
         elements = [];
         openCells = 0;
         rightFlags = 0;
-        setFlagCount(0);
 
         if (!isUndefined(params)) {
+            defaultParams = params;
             if (!isUndefined(params.width)) {
-                params.width = Number.parseInt(params.width);
-                __x = params.width < 3 ? 10 : params.width;
+                params.width = parseInt(Number(params.width));
+                console.log();
+                __width = params.width < 3 ? 10 : params.width;
             }
             if (!isUndefined(params.height)) {
-                params.height = Number.parseInt(params.height);
-                __y = params.height < 3 ? 10 : params.height;
+                params.height = parseInt(Number(params.height));
+                __height = params.height < 3 ? 10 : params.height;
             }
             if (!isUndefined(params.width) && !isUndefined(params.height) && isUndefined(params.bombCount))
-                bombCount = __x * __y * 0.15625;
+                bombCount = __width * __height * 0.15625;
             else if (!isUndefined(params.bombCount))
-                bombCount = (params.bombCount < 1 || params.bombCount > __x * __y - 1) ? __x * __y * 0.15625 : params.bombCount;
+                bombCount = (params.bombCount < 1 || params.bombCount > __width * __height - 1) ? __width * __height * 0.15625 : params.bombCount;
         }
-        console.log(bombCount);
-        setBombCount(Number.parseInt(bombCount));
+        else {
+            __width = width < 3 ? 10 : width;
+            __height = height < 3 ? 10 : height;
+            bombCount = (isUndefined(bombCount) || bombCount < 1 || bombCount > __width * __height - 1) ? __width * __height * 0.15625 : bombCount;
+        }
+
+        setBombCount(parseInt(bombCount));
+        setFlagCount(0);
     }
 
     function drawField() {
         field = drawElement('div', container, { 'class': minerFieldClassName });
 
-        if (field) {
-            for (var i = 0; i < __y; i++) {
+        if (!isUndefined(field)) {
+            for (var i = 0; i < __height; i++) {
                 elements[i] = [];
-                for (var j = 0; j < __x; j++) {
+                for (var j = 0; j < __width; j++) {
                     var addClass = j == 0 ? 'break-line' : undefined,
                         cell = new Cell(field, i, j);
 
@@ -170,12 +178,15 @@ var Miner = function (container, width, height, bombCount) {
                     elements[i].push(cell);
                 }
             }
-            field.style.width = __x * 20 + 'px';
+            field.style.width = __width * 20 + 'px';
         }
         return field;
     }
 
     function elementClick(cell) {
+        if (cell.flag || cell.check)
+            return false;
+
         openCells++;
 
         if (cell.isBomb) {
@@ -187,7 +198,7 @@ var Miner = function (container, width, height, bombCount) {
         cell.bombNear = findBombNear(cell);
         cell.openCell();
 
-        if (__x * __y - openCells == bombCount) {
+        if (__width * __height - openCells == bombCount) {
             openAllCell();
             gameOver('win');
             return false;
@@ -268,16 +279,17 @@ var Miner = function (container, width, height, bombCount) {
 
     function setBomb() {
         var bombOnPlace = 0;
-        console.log(bombCount, __x, __y);
+
         while (bombOnPlace !== bombCount) {
-            var rndElement = Math.floor(Math.random() * __x * __y),
-                row = Number.parseInt(rndElement / __y),
-                col = rndElement % __x,
+            var rndElement = Math.floor(Math.random() * __width * __height),
+                row = parseInt(rndElement / __height),
+                col = rndElement % __width,
                 cell = elements[row][col];
 
             if (!cell.isBomb) {
                 cell.isBomb = true;
-                //cell.element.innerHTML = '*'; //comment after check
+                if (hint === true)
+                    cell.element.innerHTML = '*'; //comment after check
                 bombOnPlace++;
             }
         }
@@ -294,12 +306,12 @@ var Miner = function (container, width, height, bombCount) {
                 break;
         }
         if (window.confirm(message + 'Game over! Could you play again?'))
-            __this.startNewGame();
+            __this.startNewGame(defaultParams);
     }
 
     function openAllCell() {
-        for (var i = 0; i < __y; i++) {
-            for (var j = 0; j < __x; j++) {
+        for (var i = 0; i < __height; i++) {
+            for (var j = 0; j < __width; j++) {
                 elements[i][j].openCell();
             }
         }
@@ -315,7 +327,7 @@ var Miner = function (container, width, height, bombCount) {
             flags = Number(newValue);
 
         if (!isUndefined(flagElement))
-            __this.writeFlagCountTo(flagElement);
+            __this.writeFlagCountTo(flagElement, flagElementCallback);
         else
             return false;
 
@@ -325,41 +337,56 @@ var Miner = function (container, width, height, bombCount) {
     var setBombCount = function (newValue) {
         if (!isUndefined(newValue))
             bombCount = Number(newValue);
+
         if (!isUndefined(bombCountElement))
-            __this.writeBombCountTo(bombCountElement);
+            __this.writeBombCountTo(bombCountElement, bombCountElementCallback);
         else
             return false;
 
         return true;
     };
 
-    this.writeFlagCountTo = function (element) {
+    this.writeFlagCountTo = function (element, callback) {
         if (element instanceof HTMLElement) {
             flagElement = element;
-            flagElement.innerHTML = flags;
+
+            if (!isUndefined(callback))
+                flagElementCallback = callback;
+
+            if (isUndefined(flagElementCallback))
+                flagElement.innerHTML = flags;
+            else
+                flagElementCallback(flags);
         }
     };
 
-    this.writeBombCountTo = function (element) {
+    this.writeBombCountTo = function (element, callback) {
         if (element instanceof HTMLElement) {
             bombCountElement = element;
-            bombCountElement.innerHTML = bombCount;
+
+            if (!isUndefined(callback))
+                bombCountElementCallback = callback;
+
+            if (isUndefined(bombCountElementCallback))
+                bombCountElement.innerHTML = bombCount;
+            else
+                bombCountElementCallback(bombCount);
         }
+    };
+
+    this.getBombCount = function () {
+        return bombCount;
     };
 
     this.startNewGame = function (params) {
-        setToDefault(params);
         __this.clearField();
+        setToDefault(params);
+
         var minerField = drawField();
         if (minerField) {
             setBomb();
             return minerField;
         }
+        return false;
     };
-
-    this.startNewGame({
-        width: width,
-        height: height,
-        bombCount: bombCount
-    });
 };
