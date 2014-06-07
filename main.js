@@ -15,6 +15,8 @@
         customBombCount,
         customSubmit;
 
+    miner.startNewGame();
+
     if (!isUndefined(document.querySelector)) {
         infoFieldFlags = document.querySelector('#minerControl .info .flags');
         infoFieldBombs = document.querySelector('#minerControl .info .bomb-count');
@@ -45,7 +47,9 @@
         customSubmit = custom_field.getElementsByName('customSubmit')[0];
     }
 
-    miner.writeFlagCountTo(infoFieldFlags);
+    miner.writeFlagCountTo(infoFieldFlags, function(flags){
+        infoFieldFlags.innerHTML = miner.getBombCount() - flags;
+    });
     miner.writeBombCountTo(infoFieldBombs);
 
     sample8x8.addEvent('click', function () {
