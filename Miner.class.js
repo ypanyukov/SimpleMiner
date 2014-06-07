@@ -126,21 +126,25 @@ var Miner = function (container, width, height, bombCount, hint) {
         bombCountElementCallback,
         flagElement,
         flagElementCallback,
-        defaultParams;
+        defaultParams,
+        gameIsOver,
+        date,
+        timeOfGame;
 
     function setToDefault(params) {
-        var date = new Date();
+        date = new Date();
+        timeOfGame = 0;
         __this.minerId = date.getHours() + '' + date.getMinutes() + '' + date.getSeconds();
         minerFieldClassName = 'miner-field-' + __this.minerId;
         elements = [];
         openCells = 0;
         rightFlags = 0;
+        gameIsOver = false;
 
         if (!isUndefined(params)) {
             defaultParams = params;
             if (!isUndefined(params.width)) {
                 params.width = parseInt(Number(params.width));
-                console.log();
                 __width = params.width < 3 ? 10 : params.width;
             }
             if (!isUndefined(params.height)) {
@@ -184,19 +188,21 @@ var Miner = function (container, width, height, bombCount, hint) {
     }
 
     function elementClick(cell) {
-        if (cell.flag || cell.check)
+        if (cell.flag || cell.check || gameIsOver)
             return false;
 
+        cell.check = true;
         openCells++;
 
+        cell.bombNear = findBombNear(cell);
+
+        cell.openCell();
+
         if (cell.isBomb) {
-            openAllCell();
+            openAllCell(true);
             gameOver('lose');
             return false;
         }
-
-        cell.bombNear = findBombNear(cell);
-        cell.openCell();
 
         if (__width * __height - openCells == bombCount) {
             openAllCell();
@@ -206,6 +212,9 @@ var Miner = function (container, width, height, bombCount, hint) {
     }
 
     function elementRightClick(cell) {
+        if (gameIsOver)
+            return false;
+
         if (cell.isBomb) {
             if (!cell.flag)
                 rightFlags++;
@@ -231,8 +240,6 @@ var Miner = function (container, width, height, bombCount, hint) {
     function findBombNear(cell) {
         var allNearElements = getAllNearElements(cell),
             nearBombCount = 0;
-
-        cell.check = true;
 
         if (allNearElements.length > 0) {
             allNearElements.forEach(function (e) {
@@ -295,8 +302,24 @@ var Miner = function (container, width, height, bombCount, hint) {
         }
     }
 
+    function timeOfGameFormat(timeOfGame) {
+        timeOfGame = parseInt(timeOfGame / 1000);
+        var hours = parseInt(timeOfGame / 60 / 60),
+            minutes = parseInt((timeOfGame - hours * 60 * 60) / 60),
+            seconds = parseInt(timeOfGame - hours * 60 * 60 - minutes * 60);
+
+        hours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+
+        return hours + ':' + minutes + ':' + seconds;
+    }
+
     function gameOver(gameState) {
-        var message = "";
+        gameIsOver = true;
+        timeOfGame = (new Date()).getTime() - date.getTime();
+        var message = "",
+            timeOfGameString = timeOfGameFormat(timeOfGame);
         switch (gameState) {
             case 'win':
                 message = 'You win! ';
@@ -305,14 +328,21 @@ var Miner = function (container, width, height, bombCount, hint) {
                 message = 'You lose! ';
                 break;
         }
-        if (window.confirm(message + 'Game over! Could you play again?'))
+        message += 'Your time is - ' + timeOfGameString + '. Game over! Could you play again?';
+        if (window.confirm(message))
             __this.startNewGame(defaultParams);
     }
 
-    function openAllCell() {
+    function openAllCell(onlyBomb) {
         for (var i = 0; i < __height; i++) {
             for (var j = 0; j < __width; j++) {
-                elements[i][j].openCell();
+                var cell = elements[i][j];
+                if (!isUndefined(onlyBomb)) {
+                    if (cell.isBomb)
+                        cell.openCell();
+                }
+                else
+                    cell.openCell();
             }
         }
     }
